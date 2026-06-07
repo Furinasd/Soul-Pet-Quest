@@ -483,7 +483,15 @@ async function onObjectTap(obj) {
     updateProgress();
     updateGuessButton();
     if (state.sessionId) {
-      api.post(`/api/sessions/${state.sessionId}/collect`, { class: obj.class }).catch(() => {});
+      try {
+        const storedClues = JSON.parse(localStorage.getItem('soul_pet_clues') || '[]');
+        if (!storedClues.includes(obj.class)) {
+          storedClues.push(obj.class);
+          localStorage.setItem('soul_pet_clues', JSON.stringify(storedClues));
+        }
+      } catch (e) {
+        console.warn('本地线索收集更新失败：', e);
+      }
     }
   }
 
@@ -601,7 +609,15 @@ async function triggerEnding() {
   }
 
   if (state.sessionId) {
-    api.post(`/api/sessions/${state.sessionId}/complete`, {}).catch(() => {});
+    try {
+      localStorage.setItem('soul_pet_completed', 'true');
+      localStorage.setItem('soul_pet_completed_at', String(Date.now()));
+      const start = Number(localStorage.getItem('soul_pet_started_at') || Date.now());
+      const duration = Date.now() - start;
+      console.log(`游戏通关！用时: ${duration}ms`);
+    } catch (e) {
+      console.warn('本地通关状态更新失败：', e);
+    }
   }
 
   await sleep(900);
@@ -742,10 +758,15 @@ async function preloadData() {
     console.warn('加载 NPC 数据失败：', e);
   }
   try {
-    const s = await api.post('/api/sessions');
-    state.sessionId = s.id;
+    const sid = 'sess_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    localStorage.setItem('soul_pet_session_id', sid);
+    localStorage.setItem('soul_pet_started_at', String(Date.now()));
+    localStorage.setItem('soul_pet_clues', JSON.stringify([]));
+    localStorage.setItem('soul_pet_completed', 'false');
+    localStorage.setItem('soul_pet_completed_at', '');
+    state.sessionId = sid;
   } catch (e) {
-    console.warn('开局会话失败：', e);
+    console.warn('本地会话创建失败：', e);
   }
 }
 
