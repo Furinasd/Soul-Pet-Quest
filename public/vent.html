@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>灵宠解忧馆 · 表情分析</title>
+    <link rel="stylesheet" href="/vent.css" />
+  </head>
+  <body>
+    <main class="app-container">
+      <header class="top-controls" aria-label="照片控制">
+        <button class="icon-button" id="backHome" type="button" title="返回主页" aria-label="返回主页">⌂</button>
+        <button class="icon-button" id="startCamera" type="button" title="打开相机" aria-label="打开相机">📷</button>
+        <button class="icon-button" id="capture" type="button" title="定格瞬间" aria-label="定格瞬间">✨</button>
+        <label class="icon-button file-button" title="上传照片" aria-label="上传照片">
+          📁
+          <input id="upload" type="file" accept="image/*" />
+        </label>
+        <button class="icon-button" id="reset" type="button" title="重置" aria-label="重置">↻</button>
+      </header>
+
+      <section class="polaroid-frame" aria-label="现实拍立得">
+        <div class="camera-view">
+          <video id="camera" class="camera-feed" autoplay playsinline muted></video>
+          <img id="snapshot" class="snapshot" alt="定格的现实照片" />
+          <div id="magicOverlay" class="magic-overlay">
+            <div class="magic-particles"></div>
+            <div class="magic-content">
+              <span class="magic-sparkle">✨</span>
+              <p class="magic-text" id="magicText">灵宠正在为你施展魔法，把现实世界变成画卷...</p>
+              <div class="magic-loader">
+                <div class="magic-loader-bar"></div>
+              </div>
+            </div>
+          </div>
+          <div class="fallback-frame" id="fallbackFrame">
+            <strong>今日精神现场</strong>
+            <span>打开相机，或上传一张照片</span>
+          </div>
+        </div>
+
+        <div class="pet-container" id="petNode">
+          <div class="speech-bubble" id="petSpeech" aria-live="polite"></div>
+          <img id="pet" class="pet" src="/characters/灵宠-九尾.png" alt="灵宠九尾" />
+        </div>
+
+        <div class="polaroid-caption">
+          <span class="caption-title">今日份解忧拍立得</span>
+          <span class="caption-date" id="polaroidDate">2026/6/6</span>
+        </div>
+      </section>
+
+      <div class="status-strip" id="status" aria-live="polite">写点不开心的事，小神兽帮你吃掉</div>
+
+      <section class="input-section" id="ventPanel" aria-label="纸条输入">
+        <textarea
+          id="ventInput"
+          maxlength="120"
+          placeholder="把今天不开心的事写下来，揉成纸团丢给小神兽吧~"
+        ></textarea>
+        <div class="personality-selector">
+          <span class="selector-label">小神兽性格：</span>
+          <div class="selector-options">
+            <button type="button" class="option-btn active" data-personality="gentle">😇 温柔治愈</button>
+            <button type="button" class="option-btn" data-personality="grumpy">👿 暴躁护短</button>
+          </div>
+        </div>
+        <div class="input-actions">
+          <span id="charCount">0/120</span>
+          <button id="feed" type="button">揉成纸团 💨</button>
+        </div>
+      </section>
+
+      <section class="slingshot-area" id="slingshotPanel" aria-label="纸团弹弓">
+        <div class="paper-ball" id="paperBall">🗞️</div>
+        <div class="slingshot-hint">👇 向下拉拽纸团，松手发射给小神兽！</div>
+      </section>
+
+      <section class="digestion" id="digestion" aria-label="消化中">
+        <div class="chew-dot"></div>
+        <p>小神兽正在吧唧吧唧消化中...</p>
+      </section>
+
+      <div class="result-divider"></div>
+
+      <section class="result-copy" id="resultCopy" aria-label="灵宠结果">
+        <div class="result-item">
+          <span class="result-title">灵宠护短诊断：</span>
+          <p class="result-body" id="analysis">还没有纸团可以诊断。</p>
+        </div>
+        <div class="result-item">
+          <span class="result-title">神兽治愈处方：</span>
+          <p class="result-body" id="action">等你投喂。</p>
+        </div>
+        <p class="result-source" id="sourceMaterial"></p>
+      </section>
+
+      <section class="receipt-section" aria-label="解忧拍立得">
+        <canvas id="receipt" width="800" height="1620" aria-label="解忧拍立得图片"></canvas>
+        <div class="share-actions">
+          <a id="download" download="解忧拍立得.png">下载 PNG</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="/vent.js"></script>
+  </body>
+</html>

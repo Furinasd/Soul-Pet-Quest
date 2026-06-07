@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>灵宠寻踪</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div id="fallback-bg"></div>
+<video id="video" autoplay playsinline muted></video>
+<canvas id="boxes"></canvas>
+<div id="overlay"></div>
+<div id="stars"></div>
+
+<!-- 顶部 HUD（游戏中常驻） -->
+<div id="hud">
+  <div class="timer-badge">
+    <div class="label">灵宠寻踪中</div>
+    <div class="clock" id="timer-clock">00:00</div>
+  </div>
+  <div class="paw-progress">
+    <div class="track">
+      <div class="fill" id="paw-fill"></div>
+      <div class="paw" data-i="0">🐾</div>
+      <div class="paw" data-i="1">🐾</div>
+      <div class="paw" data-i="2">🐾</div>
+      <div class="paw" data-i="3">✨</div>
+    </div>
+  </div>
+  <div class="round-btn-group">
+    <button class="round-btn" id="help-btn" aria-label="帮助">?<span class="cap">帮助</span></button>
+    <button class="round-btn" id="home-btn" aria-label="主页">⌂<span class="cap">主页</span></button>
+  </div>
+</div>
+
+<!-- 左上提示卡（游戏中常驻） -->
+<div class="hint-card" id="hint-card">
+  <span class="ttl">鉴宝提示</span>
+  把镜头对准物品，<br>识别到的物体会有灵宠附身。
+</div>
+
+<!-- 任务横条 -->
+<div id="task-banner">
+  <div class="tb-icon">📜</div>
+  <div class="tb-body">
+    <div class="tb-title">当前任务</div>
+    <div class="tb-text" id="task-text">帮助灵宠寻找回家的路</div>
+  </div>
+</div>
+
+<!-- 扫描遮罩 -->
+<div id="scan-overlay">
+  <div id="scan-circle"></div>
+  <div id="scan-text">正在感应周围的灵气...</div>
+</div>
+
+<button id="rescan-btn">↻ 重 扫</button>
+<button id="guess-btn">✦ 试着猜谜</button>
+<div id="status-bar"></div>
+
+<!-- 阶段四：猜谜面板 -->
+<div id="guess-panel">
+  <div class="gp-card">
+    <button class="gp-close" id="guess-close" aria-label="关闭">✕</button>
+    <div class="gp-title">线索整理</div>
+    <div class="gp-clues" id="guess-clues"></div>
+    <div class="gp-prompt">从这些线索看，<br>迷路灵宠想让你找到的，是？</div>
+    <input id="guess-input" type="text" maxlength="20" placeholder="输入你的答案…" />
+    <div class="guess-feedback" id="guess-feedback"></div>
+    <button class="gp-submit" id="guess-submit">提交答案</button>
+  </div>
+</div>
+
+<div id="pet-final">🐱</div>
+
+<!-- 帮助弹窗 -->
+<div id="help-modal">
+  <div class="card">
+    <h3>玩 法 说 明</h3>
+    <ul>
+      <li>把摄像头对准房间里的物品（书 / 杯子 / 盆栽 / 电脑等）</li>
+      <li>识别到的物品上会浮现表情，它是被灵宠"附身"了</li>
+      <li>点击物品，听灵宠说话、收集线索</li>
+      <li>集齐 3 个线索，找到「最温暖、最有光的地方」</li>
+      <li>右下角「重扫」可以换角度重新识别</li>
+    </ul>
+    <button class="close" id="help-close">好 哒</button>
+  </div>
+</div>
+
+<!-- 开始界面 -->
+<div id="start-screen">
+  <!-- 顶部 HUD（开始页里也露出一截，作为视觉氛围） -->
+  <div class="start-top-hud">
+    <div class="timer-badge">
+      <div class="label">灵宠寻踪中</div>
+      <div class="clock">00:00</div>
+    </div>
+    <div class="paw-progress">
+      <div class="track">
+        <div class="fill" style="width:0"></div>
+        <div class="paw" data-i="0">🐾</div>
+        <div class="paw" data-i="1">🐾</div>
+        <div class="paw" data-i="2">🐾</div>
+        <div class="paw" data-i="3">✨</div>
+      </div>
+    </div>
+    <div class="round-btn-group">
+      <div class="round-btn" aria-hidden="true">?<span class="cap">帮助</span></div>
+      <div class="round-btn" aria-hidden="true">⌂<span class="cap">主页</span></div>
+    </div>
+  </div>
+
+  <div class="start-hint-card">
+    <span class="ttl">温馨提示</span>
+    可疑区域有<br>柔和能量波动
+  </div>
+
+  <div class="start-main">
+    <div class="start-stage">
+      <div class="start-textcol">
+        <div id="start-title">灵宠解忧馆</div>
+        <div class="title-paws">
+          <span class="line"></span>
+          <span>🐾</span><span>🌸</span><span>🐾</span>
+          <span class="line"></span>
+        </div>
+        <div id="start-sub">在这嘈杂的世界里，在房屋中静静地疗愈</div>
+
+        <div class="mode-section-label">请选择游戏模式</div>
+
+        <div class="mode-cards">
+          <button class="mode-card mode-card-hide" id="mode-hide" data-mode="hide">
+            <div class="mode-body">
+              <div class="mode-title"><span class="paw-tag">🐾</span>捉迷藏模式</div>
+              <div class="mode-desc">
+                寻找藏起来的小灵宠，<br>
+                发现隐藏的温暖惊喜。
+              </div>
+            </div>
+            <div class="mode-cat" aria-hidden="true">🐈‍⬛</div>
+          </button>
+
+          <button class="mode-card" id="mode-emotion" data-mode="emotion">
+            <div class="mode-icon">😺</div>
+            <div class="mode-body">
+              <div class="mode-title">表情分析</div>
+              <div class="mode-desc">
+                读懂宠物的表情语言，<br>
+                了解它们的内心声音。
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div id="start-hint">
+          需要开启摄像头权限<br>
+          把镜头朝向桌面 / 房间 / 物品<br>
+          拒绝权限也可以游玩（梦幻背景）
+        </div>
+      </div>
+
+      <div class="start-pet-stage">
+        <div class="pet-halo"></div>
+        <img class="pet-art-img" src="/characters/灵宠-白泽新.png" alt="灵宠白泽" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 结局界面 -->
+<div id="ending">
+  <div id="ending-pet">🐱</div>
+  <div id="ending-text"></div>
+  <button id="ending-btn">再 玩 一 次</button>
+</div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

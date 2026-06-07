@@ -1,0 +1,14 @@
+{
+  "name": "soul-pet-quest",
+  "version": "0.1.0",
+  "description": "灵宠寻踪 — Web AR 解谜游戏全栈 MVP",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
